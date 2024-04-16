@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>迈克尔逊干涉实验波长计算器</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f0f0f0;
+    }
+    .container {
+    max-width: 800px;
+    margin: 50px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    text-align: center; /* 让容器内的文本居中 */
+}
+
+h1 {
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+    text-align: center; /* 让表格内的文本居中 */
+    margin-left: auto; /* 让表格在容器中水平居中 */
+    margin-right: auto; /* 让表格在容器中水平居中 */
+}
+
+th, td {
+    padding: 8px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+input[type="text"] {
+    width: 60px; /* 调整输入框的宽度 */
+    text-align: center; /* 让输入框内的文本居中 */
+}
+
+#calculate-button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#result {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+#result-left,
+#result-right {
+    flex: 1;
+    text-align: center;
+}
+
+#status {
+    margin-top: 20px;
+    text-align: center; /* 让结果文本居中 */
+}
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: black;
+  shape-rendering: crispEdges;
+}
+
+@media screen and (max-width: 600px) {
+    .container {
+        margin: 10px;
+        padding: 5px;
+        text-align: center;
+    }
+    table {
+        width: auto; /* 将表格宽度设为自适应 */
+        margin-left: auto; /* 让表格在容器中水平居中 */
+        margin-right: auto; /* 让表格在容器中水平居中 */
+    }
+    th, td {
+        padding: 3px; /* 调整单元格内边距以适应小屏幕 */
+    }
+    input[type="text"] {
+        width: 90%; /* 将输入框的宽度设置为百分比 */
+    }
+    #chart {
+        width: auto;
+        height: 400px; /* 调整图表高度 */
+    }
+}
+</style>
+</head>
+<body>
+<div class="container">
+    <h1>牛顿环实验数据处理</h1>
+    <label for="inputBox">钠光灯光波波长（ x10<sup>-4</sup> mm）：</label>
+    <input type="text" id="inputBox" value="5.893">
+    <br><br>
+    <form id="data-form">
+        <table>
+            <thead>
+                <tr>
+                    <th>环数m</th>
+                    <th>30</th>
+                    <th>29</th>
+                    <th>28</th>
+                    <th>27</th>
+                    <th>26</th>
+                    <th>25</th>
+                    <th>24</th>
+                    <th>23</th>
+                    <th>22</th>
+                    <th>21</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <!-- 替换每个单元格为输入框 -->
+                    <th>读数x(mm)<br>左</th>
+                    <td><input type="text" name="cell10"></td>
+                    <td><input type="text" name="cell11"></td>
+                    <td><input type="text" name="cell12"></td>
+                    <td><input type="text" name="cell13"></td>
+                    <td><input type="text" name="cell14"></td>
+                    <td><input type="text" name="cell15"></td>
+                    <td><input type="text" name="cell16"></td>
+                    <td><input type="text" name="cell17"></td>
+                    <td><input type="text" name="cell18"></td>
+                    <td><input type="text" name="cell19"></td>
+                </tr>
+                <tr>
+                    <!-- 替换每个单元格为输入框 -->
+                    <th>读数x(mm)<br>右</th>
+                    <td><input type="text" name="cell20"></td>
+                    <td><input type="text" name="cell21"></td>
+                    <td><input type="text" name="cell22"></td>
+                    <td><input type="text" name="cell23"></td>
+                    <td><input type="text" name="cell24"></td>
+                    <td><input type="text" name="cell25"></td>
+                    <td><input type="text" name="cell26"></td>
+                    <td><input type="text" name="cell27"></td>
+                    <td><input type="text" name="cell28"></td>
+                    <td><input type="text" name="cell29"></td>
+                </tr>
+            </tbody>
+        </table>
+    </form>
+    <button id="calculate-button">执行程序</button>
+    <div id="result">
+        <div id="result-left"></div>
+        <div id="result-right"></div>
+    </div>
+    <div id="status"></div>
+    <div id="chart-container">
+        <svg id="chart" width="300" height="400"></svg>
+    </div>
+</div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+    document.getElementById('calculate-button').addEventListener('click', function() {
+        try {
+            var d_values_1 = [];
+            var d_values_2 = [];
+            var D = [];
+            var DmDn = [];
+            var inputBoxValue = parseFloat(document.getElementById("inputBox").value);
+            var inputBoxValue = parseFloat(document.getElementById("inputBox").value);
+            if (isNaN(inputBoxValue)) {
+                throw "请输入有效的数字";
+            }
+            var w0 = inputBoxValue * Math.pow(10, -4);
+
+            // 逐差法计算
+            // 从输入字段提取数据
+            for (var i = 0; i <= 9; i++) {
+                var value1 = parseFloat(document.getElementsByName("cell1" + i)[0].value);
+                var value2 = parseFloat(document.getElementsByName("cell2" + i)[0].value);
+                if (isNaN(value1) || isNaN(value2)) throw "请输入有效的数字";
+                d_values_1.push(value1);
+                d_values_2.push(value2);
+            }
+            for (var i = 0; i <= 9; i++) {
+                var value = d_values_1[i] - d_values_2[i];
+                D.push(value);
+            }
+            for (var i = 0; i <= 4; i++) {
+                var value = D[i] ** 2 - D[i + 5] ** 2;
+                DmDn.push(value);
+            }
+            var dd = 0;
+            for (var i = 0; i <= 4; i++) {
+                dd += DmDn[i];
+            }
+            var z = dd / 5;
+            R1 = z / (4 * 5 * w0)
+
+            // 作图法处理数据
+            var data_x = [30, 29, 28, 27, 26, 25, 24, 23, 22, 21];
+            var data_y = [];
+            for (var i = 0; i <= 9; i++) {
+                var value = D[i] ** 2;
+                data_y.push(value);
+            }
+            var n = data_y.length;
+            var sumX = 0, sumY = 0, sumXY = 0, sumXX = 0;
+            for (var i = 0; i < n; i++) {
+                sumX += data_x[i];
+                sumY += data_y[i];
+                sumXY += data_x[i] * data_y[i];
+                sumXX += data_x[i] * data_x[i];
+            }
+            var k = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+            R2 = k / (4 * w0)
+            
+
+            // 图像计算
+            var average_X = sumX / n
+            var average_Y = sumY / n
+            var A = average_Y - k * average_X
+            var y_start = A
+            var y_end = A + k * 375
+            var max = Math.max(...data_y);
+            var min = Math.min(...data_y);
+            var mm = max - min;
+
+
+            // 显示结果
+            document.getElementById("result-left").innerHTML = "逐差法计算：<br>曲率半径为：" + R1.toFixed(1) + "mm<br>";
+            document.getElementById("result-right").innerHTML = "作图法计算：<br>波长为：" + R2.toFixed(1) + "mm<br>";
+            document.getElementById("status").innerHTML = "运行完毕<br><br>下图为作图法使用最小二乘法拟合图：<br><br>";
+
+            // 删除已有图表
+            const existingSvg = d3.select("#chart");
+            existingSvg.selectAll("*").remove();
+            // 创建 SVG 图表
+            const svg = d3.select("#chart");
+
+            // 定义比例尺
+            const xScale = d3.scaleLinear()
+              .domain([0, data_x[data_x.length - 1]]) // 调整域
+              .range([50, 300]);
+
+            const yScale = d3.scaleLinear()
+              .domain([min -0.1 * mm, max + 0.1 * mm]) // 调整域
+              .range([350, 0]);
+
+            // 创建 x 轴和 y 轴
+            const xAxis = d3.axisBottom(xScale);
+            const yAxis = d3.axisLeft(yScale);
+
+            // 添加 x 轴到 SVG
+            svg.append("g")
+              .attr("class", "x-axis")
+              .attr("transform", "translate(0, 350)")
+              .call(xAxis);
+
+            // 添加 y 轴到 SVG
+            svg.append("g")
+              .attr("class", "y-axis")
+              .attr("transform", "translate(50, 0)")
+              .call(yAxis);
+
+            // 画线
+            const line = svg.append("line")
+              .attr("x1", xScale(data_x[0]))
+              .attr("y1", yScale(y_start))
+              .attr("x2", xScale(data_x[data_x.length - 1]))
+              .attr("y2", yScale(y_end))
+              .attr("stroke", "red")
+              .attr("stroke-width", 2);
+
+            // 画点
+            for (let i = 1; i <= n; i ++) {
+              const point = svg.append("circle")
+                .attr("id", `point${i}`) // 为每个点添加唯一 ID
+                .attr("cx", xScale(data_x[i-1]))
+                .attr("cy", yScale(data_y[i-1]))
+                .attr("r", 5)
+                .attr("fill", "blue");
+            }
+
+            // 缩放行为
+            const zoom = d3.zoom()
+              .scaleExtent([0.5, 5])
+              .on("zoom", zoomed);
+
+            svg.call(zoom);
+
+            function zoomed(event) {
+              const { transform } = event;
+
+              // 更新 x 轴和 y 轴比例尺
+              const newXScale = transform.rescaleX(xScale);
+              const newYScale = transform.rescaleY(yScale);
+
+              // 更新 x 轴和 y 轴
+              svg.select(".x-axis").call(xAxis.scale(newXScale));
+              svg.select(".y-axis").call(yAxis.scale(newYScale));
+
+              // 更新线的位置
+              line.attr("x1", newXScale(data_x[0]))
+                  .attr("y1", newYScale(y_start))
+                  .attr("x2", newXScale(data_x[data_x.length - 1]))
+                  .attr("y2", newYScale(y_end));
+
+              // 更新点的位置
+              for (let i = 1; i <= n; i++) {
+                const point = svg.select(`#point${i}`);
+                point.attr("cx", newXScale(data_x[i-1]))
+                     .attr("cy", newYScale(data_y[i-1]));
+              }
+            }
+        } catch (error) {
+            document.getElementById("status").innerHTML = "错误：" + error;
+            document.getElementById("result").innerHTML = ""
+            d3.select("#chart").selectAll("*").remove();
+        }
+    });
+</script>
+</body>
+</html>

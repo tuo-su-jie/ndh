@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Detection Example</title>
+    <script>
+        // 设备检测
+        function redirectToMobileOrDesktop() {
+            var userAgent = navigator.userAgent.toLowerCase();
+            // 检测是否为移动设备
+            if (userAgent.match(/android|webos|iphone|ipad|ipod|blackberry|windows phone/i)) {
+                window.location.href = 'mobile.html'; // 重定向到移动设备页面
+            } else {
+                window.location.href = 'desktop.html'; // 重定向到桌面设备页面
+            }
+        }
+        // 页面加载时进行检测
+        window.onload = redirectToMobileOrDesktop;
+    </script>
+</head>
+<body>
+    <!-- 这是一个重定向页面，通常不会有任何内容 -->
+</body>
+</html>
